@@ -2,7 +2,7 @@ import random
 import math
 
 LEARNING_RATE = 0.1
-TRAINING_EPOCHS = 1000
+TRAINING_EPOCHS = 100
 NUM_OF_TRAINING_DATA = 100
 
 def create_random_sequence(N):
@@ -102,7 +102,28 @@ if __name__ == '__main__':
         weights[1][i][j] = weights[1][i][j] - LEARNING_RATE * nodes[1][i].getY() * nodes[2][j].getOutDelta(nodes[0][j].getY())
 
     if (cycle % 10 == 0):
-      print('Cycle:\t{}, Error:\t{}'.format(cycle, E))
+      print('Epoch:\t{}, Error:\t{}'.format(cycle, E))
 
   # testing
+  E = 0
+  testing_dataset = [create_random_sequence(N) for _ in range(NUM_OF_TRAINING_DATA)]
+  for data in testing_dataset:
+    # Initialize nodes.
+    nodes = [[Node(y) for y in data], [Node(0) for _ in range(M)], [Node(0) for _ in range(N)]]
 
+    # input -> intermediate
+    for i in range(N):
+      for j in range(M):
+        nodes[1][j].add(nodes[0][i].getY() * weights[0][i][j])
+
+    # intermediate -> output
+    for i in range(M):
+      for j in range(N):
+        nodes[2][j].add(nodes[1][i].getY() * weights[1][i][j])
+
+    # calc Error
+    for i in range(N):
+      E += math.pow(nodes[0][i].getY() - nodes[2][i].getY(), 2) / 2
+  
+  E = E / NUM_OF_TRAINING_DATA / N
+  print("Test Error:\t{}".format(E))
