@@ -1,11 +1,12 @@
 import random
 import math
 
-LEARNING_RATE = 1
-TRAINING_CYCLES = 100000
+LEARNING_RATE = 0.1
+TRAINING_EPOCHS = 1000
+NUM_OF_TRAINING_DATA = 100
 
 def create_random_sequence(N):
-  return [random.randint(0, 1) for _ in range(N)]
+  return [random.randint(0, 1) * 1.0 for _ in range(N)]
 
 def sigmoid(x):
   return 1/(1 + math.pow(math.e, -x))
@@ -48,34 +49,37 @@ if __name__ == '__main__':
   print('Number of intermidiate units: ', end='')
   M = int(input())
 
-  print(N)
-  print(M)
-
   # Initialize network weights.
-  weights = [[[0 for _ in range(M)] for _ in range(N)], [[0 for _ in range(N)] for _ in range(M)]]
+  weights = [[[random.random() for _ in range(M)] for _ in range(N)], [[random.random() for _ in range(N)] for _ in range(M)]]
+
+  # make 100 Training Data.
+  training_dataset = [create_random_sequence(N) for _ in range(NUM_OF_TRAINING_DATA)]
 
   # training
 
-  for cycle in range(TRAINING_CYCLES):
-    # Initialize nodes.
-    nodes = [[Node(y) for y in create_random_sequence(N)], [Node(0) for _ in range(M)], [Node(0) for _ in range(N)]]
-    
-    # input -> intermediate
-    for i in range(N):
-      for j in range(M):
-        nodes[1][j].add(nodes[0][i].getY() * weights[0][i][j])
+  for cycle in range(TRAINING_EPOCHS):
+    E = 0.0
+    for data in training_dataset:
+      # Initialize nodes.
+      nodes = [[Node(y) for y in data], [Node(0) for _ in range(M)], [Node(0) for _ in range(N)]]
+      
+      # input -> intermediate
+      for i in range(N):
+        for j in range(M):
+          nodes[1][j].add(nodes[0][i].getY() * weights[0][i][j])
 
-    # intermediate -> output
-    for i in range(M):
-      for j in range(N):
-        nodes[2][j].add(nodes[1][i].getY() * weights[1][i][j])
+      # intermediate -> output
+      for i in range(M):
+        for j in range(N):
+          nodes[2][j].add(nodes[1][i].getY() * weights[1][i][j])
 
-    # calc Error
+      # calc Error
 
-    E = 0
+      for i in range(N):
+        E = E + (math.pow(nodes[0][i].getY() - nodes[2][i].getY(), 2) / 2)
 
-    for i in range(N):
-      E = E + (math.pow(nodes[0][i].getY() - nodes[2][i].getY(), 2) / 2)
+    # Error Average
+    E = E/NUM_OF_TRAINING_DATA/N
 
     # back output -> intermediate
     
@@ -97,8 +101,8 @@ if __name__ == '__main__':
       for j in range(N):
         weights[1][i][j] = weights[1][i][j] - LEARNING_RATE * nodes[1][i].getY() * nodes[2][j].getOutDelta(nodes[0][j].getY())
 
-    if (cycle % 10000 == 0):
-      print('Cycle: {}, Error:{}'.format(cycle, E))
+    if (cycle % 10 == 0):
+      print('Cycle:\t{}, Error:\t{}'.format(cycle, E))
 
   # testing
 
